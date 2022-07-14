@@ -16,7 +16,7 @@ pub enum Delta {
 
 impl Cluster {
     fn get_cluster_delta(&self, delta: &Delta) -> i32 {
-        
+
         //! `get_cluster_delta()` gets the value of the given delta type (0, 1, or 2)
         //! for a cluster
 
@@ -36,6 +36,7 @@ fn build_cluster(delta0: i32, delta1: i32, delta2: i32) -> Cluster {
         delta2,
     }
 }
+
 //TODO: Get rid of make_fake_cluster_vec() and make it part of a test
 pub fn make_fake_cluster_vec() -> Vec<Cluster> {
     let v: Vec<Cluster> = vec![
@@ -64,19 +65,20 @@ pub fn sort_by_delta2(v: &mut [Cluster]) {
 }
 
 pub fn partition(v: &mut [Cluster], l: usize, r: usize, delta: &Delta) -> usize {
+    
     //! Called by `random_partition()`. Takes the same arguments as `find_kth()` and returns the "true"
     //! index (i.e., index if `v` were sorted) of the Cluster currently at the rightmost possible index
-    //! that could still contain the `k`th Cluster (i.e.,`r`th index). Cluster at this `r`th index is based
+    //! that could still have the `k`th Cluster (i.e.,`r`th index). Cluster at this `r`th index is based
     //! on random `pivot` from `random_partition()`.
     //!
-    //! `j` tracks the index of the element being evaluated at each iteration of the while loop. `i`
-    //! counts the number of elements whose delta value is less than that of the `r`th element.
+    //! `j` tracks the index of the Cluster being evaluated at each iteration of the while loop. `i`
+    //! counts the number of Clusters whose delta value is less than that of the `r`th Cluster.
     //!
-    //! If a Cluster has a delta value greater than or equal to that of the `r`th element, it  
-    //! swaps position with the next Cluster whose delta is less than that of the `r`th element.
+    //! If a Cluster has a delta value greater than or equal to that of the `r`th Cluster, it  
+    //! swaps position with the next Cluster whose delta is less than that of the `r`th Cluster.
     //!
-    //! Since `i` counts the number of elements with a delta less than the `r`th element, the final
-    //! swap of the `i`th and `r`th elements puts that `r`th element in its correct position (as if
+    //! Since `i` counts the number of Clusters with a delta less than the `r`th Cluster, the final
+    //! swap of the `i`th and `r`th Clusters puts that `r`th Cluster in its correct position (as if
     //! `v` were sorted).
 
     let mut i = l;
@@ -100,12 +102,12 @@ pub fn random_partition(v: &mut [Cluster], l: usize, r: usize, delta: &Delta) ->
     //! of the Cluster currently at a randomly selected `pivot` index.
     //!
     //! Chooses a random `pivot` value within the range plausible indices
-    //! for the `k`th Cluster and swaps the `r`th element with the element in the pivot position.
-    //! Calls `partition()` which evaluates all elements in `v` against the `r`th element (which
-    //! is the element formerly at the `pivot` index).
+    //! for the `k`th Cluster and swaps the `r`th Cluster with the Cluster in the pivot position.
+    //! Calls `partition()` which evaluates Clusters in `v` against the `r`th Cluster (which
+    //! is the Cluster formerly at the `pivot` index).
     //!
-    //! `partition()` returns a count of elements with a delta value less than that at the `r`th
-    //! (formerly, `pivot`) index (i.e., the index of rightmost element if `v` were sorted); `random_partition()`
+    //! `partition()` returns a count of Clusters with a delta value less than that at the `r`th
+    //! (formerly, `pivot`) index (i.e., the index of `r`th Cluster if `v` were sorted); `random_partition()`
     //! returns this same value
 
     let pivot = rand::thread_rng().gen_range(l..=r);
@@ -114,12 +116,12 @@ pub fn random_partition(v: &mut [Cluster], l: usize, r: usize, delta: &Delta) ->
 }
 
 pub fn find_kth(v: &mut [Cluster], l: usize, r: usize, k: usize, delta: &Delta) -> i32 {
-    //! `find_kth()` finds the kth element in vector without completely sorting it
+    //! `find_kth()` finds the kth Cluster in vector without completely sorting it
     //! Based on the QuickSelect Algorithm found here: https://www.geeksforgeeks.org/quickselect-algorithm/
     //!
-    //! Takes mutable reference to a vector of Clusters (`v`), the index of the leftmost element in `v` that could
-    //! possibly contain the `k`th cluster (`l`), the index of the rightmost element in `v` that could possibly
-    //! contain the `k`th cluster (`r`), the desired index (`k`), and the desired delta type of the Cluster in the `k`th
+    //! Takes mutable reference to a vector of Clusters (`v`), the leftmost index in `v` that could
+    //! possibly have the `k`th cluster (`l`), the rightmost index in `v` that could possibly
+    //! have the `k`th cluster (`r`), the desired index (`k`), and the desired delta type of the Cluster in the `k`th
     //! position if `v` were sorted (`delta`).
     //!
     //! With each recursive call, a random pivot is chosen and `partition_index` reflects the number of

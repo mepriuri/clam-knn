@@ -1,13 +1,24 @@
 use rand::Rng;
 use std::cmp::Ordering;
+use arbitrary::Arbitrary; 
+#[cfg(test)]
+extern crate quickcheck;
+//#[cfg(test)]
+//use quickcheck::{Arbitrary,Gen};
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
 
-#[derive(Debug)]
+
+#[derive(Debug, Clone, Arbitrary)]
 pub struct Cluster {
-    delta0: i32,
-    delta1: i32,
-    delta2: i32,
+    delta0: u32,
+    delta1: u32,
+    delta2: u32,
 }
 
+
+#[derive(Debug)]
 pub enum Delta {
     Delta0,
     Delta1,
@@ -15,7 +26,7 @@ pub enum Delta {
 }
 
 impl Cluster {
-    fn get_cluster_delta(&self, delta: &Delta) -> i32 {
+    fn get_cluster_delta(&self, delta: &Delta) -> u32 {
 
         //! `get_cluster_delta()` gets the value of the given delta type (0, 1, or 2)
         //! for a cluster
@@ -28,29 +39,6 @@ impl Cluster {
     }
 }
 
-//TODO: Get rid of build_cluster() and make it part of a test
-fn build_cluster(delta0: i32, delta1: i32, delta2: i32) -> Cluster {
-    Cluster {
-        delta0,
-        delta1,
-        delta2,
-    }
-}
-
-//TODO: Get rid of make_fake_cluster_vec() and make it part of a test
-pub fn make_fake_cluster_vec() -> Vec<Cluster> {
-    let v: Vec<Cluster> = vec![
-        build_cluster(523, 990, 431),
-        build_cluster(371, 499, 212),
-        build_cluster(490, 1097, 117),
-        build_cluster(242, 947, 198),
-        build_cluster(761, 866, 514),
-        build_cluster(241, 281, 131),
-        build_cluster(520, 824, 378),
-    ];
-
-    v
-}
 
 pub fn sort_by_delta0(v: &mut [Cluster]) {
     v.sort_by(|a, b| a.delta0.cmp(&b.delta0));
@@ -63,6 +51,11 @@ pub fn sort_by_delta1(v: &mut [Cluster]) {
 pub fn sort_by_delta2(v: &mut [Cluster]) {
     v.sort_by(|a, b| a.delta2.cmp(&b.delta2));
 }
+
+pub fn sort_by_delta(v: &mut [Cluster], delta: &Delta) {
+    v.sort_by(|a, b| a.get_cluster_delta(delta).cmp(&b.get_cluster_delta(delta)));
+}
+
 
 pub fn partition(v: &mut [Cluster], l: usize, r: usize, delta: &Delta) -> usize {
     
@@ -115,7 +108,7 @@ pub fn random_partition(v: &mut [Cluster], l: usize, r: usize, delta: &Delta) ->
     partition(v, l, r, delta)
 }
 
-pub fn find_kth(v: &mut [Cluster], l: usize, r: usize, k: usize, delta: &Delta) -> i32 {
+pub fn find_kth(v: &mut [Cluster], l: usize, r: usize, k: usize, delta: &Delta) -> u32 {
     //! `find_kth()` finds the kth Cluster in vector without completely sorting it
     //! Based on the QuickSelect Algorithm found here: https://www.geeksforgeeks.org/quickselect-algorithm/
     //!
@@ -153,3 +146,195 @@ pub fn find_kth(v: &mut [Cluster], l: usize, r: usize, k: usize, delta: &Delta) 
     }
     kth_delta
 }
+
+
+#[cfg(test)]
+mod tests {
+
+    use crate::find_kth; 
+    use crate::Cluster; 
+    use crate::Delta; 
+
+    #[test]
+    fn find_2nd_delta0() {
+
+        let mut v: Vec<Cluster> = vec![
+        Cluster{delta0: 523, delta1: 990, delta2: 431},
+        Cluster{delta0: 371, delta1: 499, delta2: 212},
+        Cluster{delta0: 490, delta1: 1097, delta2: 117},
+        Cluster{delta0: 242, delta1: 947, delta2: 198},
+        Cluster{delta0: 761, delta1: 866, delta2: 514},
+        Cluster{delta0: 241, delta1: 281, delta2: 131},
+        Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+
+        let r = v.len() - 1;
+
+        assert_eq!(find_kth(&mut v, 0, r, 2, &Delta::Delta0), 371);
+    }
+
+    #[test]
+    fn find_3rd_delta1() {
+
+        let mut v: Vec<Cluster> = vec![
+        Cluster{delta0: 523, delta1: 990, delta2: 431},
+        Cluster{delta0: 371, delta1: 499, delta2: 212},
+        Cluster{delta0: 490, delta1: 1097, delta2: 117},
+        Cluster{delta0: 242, delta1: 947, delta2: 198},
+        Cluster{delta0: 761, delta1: 866, delta2: 514},
+        Cluster{delta0: 241, delta1: 281, delta2: 131},
+        Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+
+        let r = v.len() - 1;
+        
+        assert_eq!(find_kth(&mut v, 0, r, 3, &Delta::Delta1), 866);
+    }
+
+    #[test]
+    fn find_4th_delta2() {
+
+        let mut v: Vec<Cluster> = vec![
+            Cluster{delta0: 523, delta1: 990, delta2: 431},
+            Cluster{delta0: 371, delta1: 499, delta2: 212},
+            Cluster{delta0: 490, delta1: 1097, delta2: 117},
+            Cluster{delta0: 242, delta1: 947, delta2: 198},
+            Cluster{delta0: 761, delta1: 866, delta2: 514},
+            Cluster{delta0: 241, delta1: 281, delta2: 131},
+            Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+    
+            let r = v.len() - 1;
+
+        assert_eq!(find_kth(&mut v, 0, r, 4, &Delta::Delta2), 378);
+    }
+
+    use fake::{Dummy, Fake, Faker};
+
+    #[derive(Debug, Dummy)]
+    pub struct FakeCluster {
+    #[dummy(faker = "1000..2000")]
+        delta0: u32,
+        delta1: u32,
+        delta2: u32,
+}
+    #[test]
+    fn fake_cluster() {
+
+        let c: FakeCluster = Faker.fake();
+        println!("{:?}", c);
+        println!("{}", c.delta0); 
+        println!("{}", c.delta1); 
+        println!("{}", c.delta2); 
+
+
+    }
+    // use crate::sort_by_delta0; 
+    // use crate::sort_by_delta1; 
+    // use crate::sort_by_delta2; 
+
+    // #[test]
+    // fn sort_delta0() { 
+
+    //     let mut v: Vec<Cluster> = vec![
+    //         Cluster{delta0: 523, delta1: 990, delta2: 431},
+    //         Cluster{delta0: 371, delta1: 499, delta2: 212},
+    //         Cluster{delta0: 490, delta1: 1097, delta2: 117},
+    //         Cluster{delta0: 242, delta1: 947, delta2: 198},
+    //         Cluster{delta0: 761, delta1: 866, delta2: 514},
+    //         Cluster{delta0: 241, delta1: 281, delta2: 131},
+    //         Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+
+    //     sort_by_delta0(&mut v);
+    //     assert_eq!(v, []);   
+
+    // } 
+
+    // #[test]
+    // fn sort_delta1() {
+
+    //     let mut v: Vec<Cluster> = vec![
+    //         Cluster{delta0: 523, delta1: 990, delta2: 431},
+    //         Cluster{delta0: 371, delta1: 499, delta2: 212},
+    //         Cluster{delta0: 490, delta1: 1097, delta2: 117},
+    //         Cluster{delta0: 242, delta1: 947, delta2: 198},
+    //         Cluster{delta0: 761, delta1: 866, delta2: 514},
+    //         Cluster{delta0: 241, delta1: 281, delta2: 131},
+    //         Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+        
+    //     sort_by_delta2(&mut v);  
+    //     assert_eq!(v, []);
+    //  } 
+
+    // #[test]
+    // fn sort_delta2() {
+
+    //     let mut v: Vec<Cluster> = vec![
+    //         Cluster{delta0: 523, delta1: 990, delta2: 431},
+    //         Cluster{delta0: 371, delta1: 499, delta2: 212},
+    //         Cluster{delta0: 490, delta1: 1097, delta2: 117},
+    //         Cluster{delta0: 242, delta1: 947, delta2: 198},
+    //         Cluster{delta0: 761, delta1: 866, delta2: 514},
+    //         Cluster{delta0: 241, delta1: 281, delta2: 131},
+    //         Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+            
+    //     sort_by_delta2(&mut v); 
+
+    //     assert_eq!(v[0..v.len()], []);
+    //  } 
+    use rand::Rng;
+    use crate::sort_by_delta; 
+    #[quickcheck]
+    fn prop(v: &mut [Cluster], delta: Delta) -> bool {
+        sort_by_delta(v, &delta); 
+        let ind1 = rand::thread_rng().gen_range(1..=v.len()); 
+        let ind2 = rand::thread_rng().gen_range(ind1..=v.len()); 
+        let slice1 = &v[0..ind1]; 
+        let slice2 = &v[0..ind2]; 
+        let av1 = slice1.collect().iter().sum::<u32>() as f32 / slice1.len() as f32; 
+        let av2 = slice2.collect().iter().sum::<u32>() as f32 / slice2.len() as f32; 
+        // let mut av1 = 0;
+        // let mut av2 = 0; 
+        // let mut i = 0; 
+        // for i in v[0..ind2] {
+        //     if i <= ind1{
+        //         av1 += v[i].get_cluster_delta(delta);
+        //         av2 += v[i].get_cluster_delta(delta); 
+        //     }
+        //     else{av2 += v[i].get_cluster_delta(delta); }
+            
+        //     i += 1;
+        // }
+        
+        av1 <= av2
+
+        
+    }
+
+    // quickcheck! {
+    //     fn prop(v: &[Cluster], delta: Delta) -> bool {
+
+    //         let ind1 = rand::thread_rng().gen_range(1..=v.len()); 
+    //         let ind2 = rand::thread_rng().gen_range(ind1..=v.len()); 
+    //         let slice1 = &v[0..ind1]; 
+    //         let slice2 = &v[0..ind2]; 
+    //         let av1 = slice1.collect().iter().sum::<u32>() as f32 / slice1.len() as f32; 
+    //         let av2 = slice2.collect().iter().sum::<u32>() as f32 / slice2.len() as f32; 
+    //         // let mut av1 = 0;
+    //         // let mut av2 = 0; 
+    //         // let mut i = 0; 
+    //         // for i in v[0..ind2] {
+    //         //     if i <= ind1{
+    //         //         av1 += v[i].get_cluster_delta(delta);
+    //         //         av2 += v[i].get_cluster_delta(delta); 
+    //         //     }
+    //         //     else{av2 += v[i].get_cluster_delta(delta); }
+                
+    //         //     i += 1;
+    //         // }
+            
+    //         av1 <= av2
+
+            
+    //     }
+
+    //     }
+    }
+

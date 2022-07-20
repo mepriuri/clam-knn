@@ -9,7 +9,7 @@ edition = "2021"
 fake = { version = "2.5", features=['derive']}
 rand = "0.8.3"
 arbitrary = { version = "1", features = ["derive"] }
-
+quickcheck = "1"
 
 [dev-dependencies]
 quickcheck = "1"

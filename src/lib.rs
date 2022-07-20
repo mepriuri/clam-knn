@@ -1,22 +1,27 @@
 use rand::Rng;
 use std::cmp::Ordering;
-use arbitrary::Arbitrary; 
-#[cfg(test)]
-extern crate quickcheck;
-//#[cfg(test)]
-//use quickcheck::{Arbitrary,Gen};
-#[cfg(test)]
-#[macro_use(quickcheck)]
-extern crate quickcheck_macros;
 
+#[cfg(test)]
+#[macro_use]
+extern crate quickcheck; 
+use quickcheck::{Arbitrary, Gen};
 
-#[derive(Debug, Clone, Arbitrary)]
+#[derive(Debug, Clone)]
 pub struct Cluster {
     delta0: u32,
     delta1: u32,
     delta2: u32,
 }
 
+impl Arbitrary for Cluster {
+    fn arbitrary(g: &mut Gen) -> Cluster {
+        Cluster {
+            delta0: u32::arbitrary(g),
+            delta1: u32::arbitrary(g),
+            delta2: u32::arbitrary(g)
+        }
+    }
+}
 
 #[derive(Debug)]
 pub enum Delta {
@@ -27,7 +32,6 @@ pub enum Delta {
 
 impl Cluster {
     fn get_cluster_delta(&self, delta: &Delta) -> u32 {
-
         //! `get_cluster_delta()` gets the value of the given delta type (0, 1, or 2)
         //! for a cluster
 
@@ -40,25 +44,11 @@ impl Cluster {
 }
 
 
-pub fn sort_by_delta0(v: &mut [Cluster]) {
-    v.sort_by(|a, b| a.delta0.cmp(&b.delta0));
-}
-
-pub fn sort_by_delta1(v: &mut [Cluster]) {
-    v.sort_by(|a, b| a.delta1.cmp(&b.delta1));
-}
-
-pub fn sort_by_delta2(v: &mut [Cluster]) {
-    v.sort_by(|a, b| a.delta2.cmp(&b.delta2));
-}
-
 pub fn sort_by_delta(v: &mut [Cluster], delta: &Delta) {
     v.sort_by(|a, b| a.get_cluster_delta(delta).cmp(&b.get_cluster_delta(delta)));
 }
 
-
 pub fn partition(v: &mut [Cluster], l: usize, r: usize, delta: &Delta) -> usize {
-    
     //! Called by `random_partition()`. Takes the same arguments as `find_kth()` and returns the "true"
     //! index (i.e., index if `v` were sorted) of the Cluster currently at the rightmost possible index
     //! that could still have the `k`th Cluster (i.e.,`r`th index). Cluster at this `r`th index is based
@@ -147,25 +137,52 @@ pub fn find_kth(v: &mut [Cluster], l: usize, r: usize, k: usize, delta: &Delta) 
     kth_delta
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use crate::find_kth; 
-    use crate::Cluster; 
-    use crate::Delta; 
+    use crate::find_kth;
+    use crate::Cluster;
+    use crate::Delta;
 
     #[test]
     fn find_2nd_delta0() {
-
         let mut v: Vec<Cluster> = vec![
-        Cluster{delta0: 523, delta1: 990, delta2: 431},
-        Cluster{delta0: 371, delta1: 499, delta2: 212},
-        Cluster{delta0: 490, delta1: 1097, delta2: 117},
-        Cluster{delta0: 242, delta1: 947, delta2: 198},
-        Cluster{delta0: 761, delta1: 866, delta2: 514},
-        Cluster{delta0: 241, delta1: 281, delta2: 131},
-        Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+            Cluster {
+                delta0: 523,
+                delta1: 990,
+                delta2: 431,
+            },
+            Cluster {
+                delta0: 371,
+                delta1: 499,
+                delta2: 212,
+            },
+            Cluster {
+                delta0: 490,
+                delta1: 1097,
+                delta2: 117,
+            },
+            Cluster {
+                delta0: 242,
+                delta1: 947,
+                delta2: 198,
+            },
+            Cluster {
+                delta0: 761,
+                delta1: 866,
+                delta2: 514,
+            },
+            Cluster {
+                delta0: 241,
+                delta1: 281,
+                delta2: 131,
+            },
+            Cluster {
+                delta0: 520,
+                delta1: 824,
+                delta2: 378,
+            },
+        ];
 
         let r = v.len() - 1;
 
@@ -174,167 +191,119 @@ mod tests {
 
     #[test]
     fn find_3rd_delta1() {
-
         let mut v: Vec<Cluster> = vec![
-        Cluster{delta0: 523, delta1: 990, delta2: 431},
-        Cluster{delta0: 371, delta1: 499, delta2: 212},
-        Cluster{delta0: 490, delta1: 1097, delta2: 117},
-        Cluster{delta0: 242, delta1: 947, delta2: 198},
-        Cluster{delta0: 761, delta1: 866, delta2: 514},
-        Cluster{delta0: 241, delta1: 281, delta2: 131},
-        Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
+            Cluster {
+                delta0: 523,
+                delta1: 990,
+                delta2: 431,
+            },
+            Cluster {
+                delta0: 371,
+                delta1: 499,
+                delta2: 212,
+            },
+            Cluster {
+                delta0: 490,
+                delta1: 1097,
+                delta2: 117,
+            },
+            Cluster {
+                delta0: 242,
+                delta1: 947,
+                delta2: 198,
+            },
+            Cluster {
+                delta0: 761,
+                delta1: 866,
+                delta2: 514,
+            },
+            Cluster {
+                delta0: 241,
+                delta1: 281,
+                delta2: 131,
+            },
+            Cluster {
+                delta0: 520,
+                delta1: 824,
+                delta2: 378,
+            },
+        ];
 
         let r = v.len() - 1;
-        
+
         assert_eq!(find_kth(&mut v, 0, r, 3, &Delta::Delta1), 866);
     }
 
     #[test]
     fn find_4th_delta2() {
-
         let mut v: Vec<Cluster> = vec![
-            Cluster{delta0: 523, delta1: 990, delta2: 431},
-            Cluster{delta0: 371, delta1: 499, delta2: 212},
-            Cluster{delta0: 490, delta1: 1097, delta2: 117},
-            Cluster{delta0: 242, delta1: 947, delta2: 198},
-            Cluster{delta0: 761, delta1: 866, delta2: 514},
-            Cluster{delta0: 241, delta1: 281, delta2: 131},
-            Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
-    
-            let r = v.len() - 1;
+            Cluster {
+                delta0: 523,
+                delta1: 990,
+                delta2: 431,
+            },
+            Cluster {
+                delta0: 371,
+                delta1: 499,
+                delta2: 212,
+            },
+            Cluster {
+                delta0: 490,
+                delta1: 1097,
+                delta2: 117,
+            },
+            Cluster {
+                delta0: 242,
+                delta1: 947,
+                delta2: 198,
+            },
+            Cluster {
+                delta0: 761,
+                delta1: 866,
+                delta2: 514,
+            },
+            Cluster {
+                delta0: 241,
+                delta1: 281,
+                delta2: 131,
+            },
+            Cluster {
+                delta0: 520,
+                delta1: 824,
+                delta2: 378,
+            },
+        ];
+
+        let r = v.len() - 1;
 
         assert_eq!(find_kth(&mut v, 0, r, 4, &Delta::Delta2), 378);
     }
 
-    use fake::{Dummy, Fake, Faker};
-
-    #[derive(Debug, Dummy)]
-    pub struct FakeCluster {
-    #[dummy(faker = "1000..2000")]
-        delta0: u32,
-        delta1: u32,
-        delta2: u32,
-}
-    #[test]
-    fn fake_cluster() {
-
-        let c: FakeCluster = Faker.fake();
-        println!("{:?}", c);
-        println!("{}", c.delta0); 
-        println!("{}", c.delta1); 
-        println!("{}", c.delta2); 
-
-
-    }
-    // use crate::sort_by_delta0; 
-    // use crate::sort_by_delta1; 
-    // use crate::sort_by_delta2; 
-
-    // #[test]
-    // fn sort_delta0() { 
-
-    //     let mut v: Vec<Cluster> = vec![
-    //         Cluster{delta0: 523, delta1: 990, delta2: 431},
-    //         Cluster{delta0: 371, delta1: 499, delta2: 212},
-    //         Cluster{delta0: 490, delta1: 1097, delta2: 117},
-    //         Cluster{delta0: 242, delta1: 947, delta2: 198},
-    //         Cluster{delta0: 761, delta1: 866, delta2: 514},
-    //         Cluster{delta0: 241, delta1: 281, delta2: 131},
-    //         Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
-
-    //     sort_by_delta0(&mut v);
-    //     assert_eq!(v, []);   
-
-    // } 
-
-    // #[test]
-    // fn sort_delta1() {
-
-    //     let mut v: Vec<Cluster> = vec![
-    //         Cluster{delta0: 523, delta1: 990, delta2: 431},
-    //         Cluster{delta0: 371, delta1: 499, delta2: 212},
-    //         Cluster{delta0: 490, delta1: 1097, delta2: 117},
-    //         Cluster{delta0: 242, delta1: 947, delta2: 198},
-    //         Cluster{delta0: 761, delta1: 866, delta2: 514},
-    //         Cluster{delta0: 241, delta1: 281, delta2: 131},
-    //         Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
-        
-    //     sort_by_delta2(&mut v);  
-    //     assert_eq!(v, []);
-    //  } 
-
-    // #[test]
-    // fn sort_delta2() {
-
-    //     let mut v: Vec<Cluster> = vec![
-    //         Cluster{delta0: 523, delta1: 990, delta2: 431},
-    //         Cluster{delta0: 371, delta1: 499, delta2: 212},
-    //         Cluster{delta0: 490, delta1: 1097, delta2: 117},
-    //         Cluster{delta0: 242, delta1: 947, delta2: 198},
-    //         Cluster{delta0: 761, delta1: 866, delta2: 514},
-    //         Cluster{delta0: 241, delta1: 281, delta2: 131},
-    //         Cluster{delta0: 520, delta1: 824, delta2: 378}, ];
-            
-    //     sort_by_delta2(&mut v); 
-
-    //     assert_eq!(v[0..v.len()], []);
-    //  } 
+    use crate::sort_by_delta;
     use rand::Rng;
-    use crate::sort_by_delta; 
-    #[quickcheck]
-    fn prop(v: &mut [Cluster], delta: Delta) -> bool {
-        sort_by_delta(v, &delta); 
-        let ind1 = rand::thread_rng().gen_range(1..=v.len()); 
-        let ind2 = rand::thread_rng().gen_range(ind1..=v.len()); 
-        let slice1 = &v[0..ind1]; 
-        let slice2 = &v[0..ind2]; 
-        let av1 = slice1.collect().iter().sum::<u32>() as f32 / slice1.len() as f32; 
-        let av2 = slice2.collect().iter().sum::<u32>() as f32 / slice2.len() as f32; 
-        // let mut av1 = 0;
-        // let mut av2 = 0; 
-        // let mut i = 0; 
-        // for i in v[0..ind2] {
-        //     if i <= ind1{
-        //         av1 += v[i].get_cluster_delta(delta);
-        //         av2 += v[i].get_cluster_delta(delta); 
-        //     }
-        //     else{av2 += v[i].get_cluster_delta(delta); }
-            
-        //     i += 1;
-        // }
-        
+
+    quickcheck!{
+    fn sorted_slice_mean_non_decreasing(v: &mut [Cluster], delta: Delta) -> bool {
+        sort_by_delta(v, &delta);
+        let ind1 = rand::thread_rng().gen_range(1..=v.len());
+        let ind2 = rand::thread_rng().gen_range(ind1..=v.len());
+
+        let slice1 = &v[0..ind1];
+        let av1 = slice1.iter().map(|x| x.get_cluster_delta(&delta)).sum::<u32>() as f32 / slice1.len() as f32;
+        let slice2 = &v[0..ind2];
+        let av2 = slice2.iter().map(|x| x.get_cluster_delta(&delta)).sum::<u32>() as f32 / slice2.len() as f32;
+
+
         av1 <= av2
+    } 
 
-        
-    }
+    fn k_or_fewer_elements_less(v: &mut [Cluster], delta: Delta, k: usize) -> bool {
+        let r = v.len() - 1;
+        let kth = find_kth(v, 0, r, k, &delta); 
+        let less_vec: Vec<_> = v.iter().map(|x| x.get_cluster_delta(&delta)).filter(|x| x < &kth).collect();
+        let eq_vec: Vec<_> = v.iter().map(|x| x.get_cluster_delta(&delta)).filter(|x| x == &kth).collect();
 
-    // quickcheck! {
-    //     fn prop(v: &[Cluster], delta: Delta) -> bool {
+        (less_vec.len() == k) | (less_vec.len() < k && less_vec.len()+eq_vec.len() > k)
 
-    //         let ind1 = rand::thread_rng().gen_range(1..=v.len()); 
-    //         let ind2 = rand::thread_rng().gen_range(ind1..=v.len()); 
-    //         let slice1 = &v[0..ind1]; 
-    //         let slice2 = &v[0..ind2]; 
-    //         let av1 = slice1.collect().iter().sum::<u32>() as f32 / slice1.len() as f32; 
-    //         let av2 = slice2.collect().iter().sum::<u32>() as f32 / slice2.len() as f32; 
-    //         // let mut av1 = 0;
-    //         // let mut av2 = 0; 
-    //         // let mut i = 0; 
-    //         // for i in v[0..ind2] {
-    //         //     if i <= ind1{
-    //         //         av1 += v[i].get_cluster_delta(delta);
-    //         //         av2 += v[i].get_cluster_delta(delta); 
-    //         //     }
-    //         //     else{av2 += v[i].get_cluster_delta(delta); }
-                
-    //         //     i += 1;
-    //         // }
-            
-    //         av1 <= av2
-
-            
-    //     }
-
-    //     }
-    }
-
+    } }
+}
